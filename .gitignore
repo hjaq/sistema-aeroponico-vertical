@@ -1,0 +1,13 @@
+# Credenciales: nunca subirlas
+secrets.h
+credenciales.h
+*.env
+.env*
+serviceAccount*.json
+
+# Compilación y editores
+.pio/
+build/
+.vscode/
+.DS_Store
+Thumbs.db
