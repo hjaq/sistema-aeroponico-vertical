@@ -4,6 +4,8 @@ Sistema de monitoreo y control automatizado con **ESP32** para un cultivo aerop�
 
 > Proyecto personal de **Hobi Jhunior Arotoma Quilca**. Lo diseñé y desarrollé a la medida de un cultivo real en Ayacucho (Perú) y lo sigo mejorando por mi cuenta.
 
+**▶ [Probar la demo en línea](https://hjaq.github.io/sistema-aeroponico-vertical/)**
+
 ![Pantalla de monitoreo](docs/capturas/monitoreo.png)
 
 ## Qué hace
@@ -16,7 +18,7 @@ Sistema de monitoreo y control automatizado con **ESP32** para un cultivo aerop�
 
 ## Demostración
 
-Abre `index.html` en el navegador. Funciona sin instalar nada y con **datos simulados**: el reloj del cultivo va 30 veces más rápido para que se vean los ciclos. En **Ajustes → Probar situaciones** puedes provocar una helada, vaciar el depósito o cortar el WiFi.
+Ábrela en línea en **https://hjaq.github.io/sistema-aeroponico-vertical/** o abre `index.html` en el navegador. Funciona sin instalar nada y con **datos simulados**: el reloj del cultivo va 30 veces más rápido para que se vean los ciclos. En **Ajustes → Probar situaciones** puedes provocar una helada, vaciar el depósito o cortar el WiFi.
 
 | Monitoreo | Historial | Control | Recetas |
 |---|---|---|---|
