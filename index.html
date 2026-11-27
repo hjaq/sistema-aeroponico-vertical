@@ -1,0 +1,1009 @@
+<title>Sistema Aeropónico Vertical</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* Layout: patrón de Google Home adaptado — mosaicos (tiles) en cuadrícula; 3 pestañas (Inicio, Actividad, Automatización) con barra inferior en el celular
+   y riel lateral desde 900 px; ajustes en el encabezado. Formas de Material 3: mosaicos de 24 px, botones en píldora.
+   Color: neutros con tinte verde; equipo encendido = relleno tonal verde; ámbar y rojo sólo para avisos (ISA-101); gráficas en azul Okabe-Ito. */
+:root {
+  --leaf: #5aa65f; --leaf-2: #2e7d32; --root: #c8b089; --chamber: #e4e9e3; --water: #b9dcf2; --water-line: #0072b2;
+  --bg: #f2f5f1; --surface: #ffffff; --surface-2: #e9eee8; --line: #d9e0d8;
+  --fg: #19221b; --muted: #545f55;
+  --brand: #2e7d32; --on-brand: #ffffff; --tonal: #d3ead3; --on-tonal: #0f3d13;
+  --warn: #9a5f00; --warn-soft: #fcefd6; --bad: #b3261e; --bad-soft: #fbe3e0;
+  --plot: #0072b2; --band: rgba(46,125,50,.13); --off: #c2cac1; --shadow: rgba(16,24,18,.10); --scrim: rgba(0,0,0,.42);
+  --f-display: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Inter", "Segoe UI", system-ui, sans-serif;
+  --r-tile: 24px; --r-ctl: 999px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --leaf: #6fbf73; --leaf-2: #4f9a54; --root: #8d7c5c; --chamber: #263027; --water: #24506b; --water-line: #56b4e9;
+  --bg: #101411; --surface: #1a201b; --surface-2: #232a24; --line: #2f3830;
+  --fg: #e4eae3; --muted: #a0aba0;
+  --brand: #7ccc80; --on-brand: #0d1f0f; --tonal: #26462a; --on-tonal: #cdeccd;
+  --warn: #e8ab42; --warn-soft: #33281a; --bad: #f2786e; --bad-soft: #3b2220;
+  --plot: #56b4e9; --band: rgba(124,204,128,.15); --off: #3b453c; --shadow: rgba(0,0,0,.45); --scrim: rgba(0,0,0,.6); color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --leaf: #6fbf73; --leaf-2: #4f9a54; --root: #8d7c5c; --chamber: #263027; --water: #24506b; --water-line: #56b4e9;
+  --bg: #101411; --surface: #1a201b; --surface-2: #232a24; --line: #2f3830;
+  --fg: #e4eae3; --muted: #a0aba0;
+  --brand: #7ccc80; --on-brand: #0d1f0f; --tonal: #26462a; --on-tonal: #cdeccd;
+  --warn: #e8ab42; --warn-soft: #33281a; --bad: #f2786e; --bad-soft: #3b2220;
+  --plot: #56b4e9; --band: rgba(124,204,128,.15); --off: #3b453c; --shadow: rgba(0,0,0,.45); --scrim: rgba(0,0,0,.6); color-scheme: dark; }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 15px; line-height: 1.45; }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; }
+svg { display: block; }
+
+.shell { min-height: 100%; }
+.app { max-width: 1120px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+@media (min-width: 900px) { .shell { display: grid; grid-template-columns: 96px minmax(0, 1fr); } .app { padding-bottom: 32px; width: 100%; } }
+
+.demo { margin-top: 12px; background: var(--surface-2); border-radius: 14px; padding: 8px 12px; font-size: 12.5px; color: var(--muted); }
+.demo b { color: var(--fg); }
+
+header.top { display: flex; align-items: center; gap: 8px; padding-block: 16px 6px; }
+@media (max-width: 420px) { .conn .ctime { display: none; } .brand h1 { font-size: 17px; } }
+.brand h1 { line-height: 1.15; } .conn { white-space: nowrap; }
+.brand { display: flex; align-items: center; gap: 10px; margin-right: auto; min-width: 0; }
+.logo { width: 42px; height: 42px; border-radius: 14px; background: var(--tonal); color: var(--on-tonal); display: grid; place-items: center; flex: none; }
+.logo svg { width: 24px; height: 24px; }
+.brand h1 { font-size: 22px; }
+.brand p { margin: 0; font-size: 12.5px; color: var(--muted); }
+.conn { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; min-height: 40px; }
+.conn .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--brand); }
+.conn[data-s=lost] { background: var(--bad-soft); border-color: var(--bad); color: var(--bad); }
+.conn[data-s=lost] .dot { background: var(--bad); }
+.conn[data-s=wait] .dot { background: var(--warn); }
+.icon-btn { width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--surface); display: grid; place-items: center; flex: none; }
+.icon-btn:hover { background: var(--surface-2); }
+.icon-btn[aria-pressed=true] { background: var(--tonal); color: var(--on-tonal); }
+.icon-btn svg { width: 22px; height: 22px; }
+
+/* Navegación: barra inferior (celular) o riel lateral (tablet y PC) */
+nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: var(--surface-2); display: grid; grid-template-columns: repeat(4, 1fr);
+  padding: 8px max(8px, env(safe-area-inset-left, 0px)) calc(8px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-right, 0px)); }
+nav.tabs button { border: 0; background: transparent; display: grid; justify-items: center; gap: 4px; padding: 4px 2px; min-height: 60px; color: var(--muted); font-size: 12.5px; font-weight: 500; }
+nav.tabs .pill { border-radius: 999px; padding: 4px 20px; transition: background-color .15s; }
+nav.tabs svg { width: 24px; height: 24px; }
+nav.tabs button[aria-selected=true] { color: var(--fg); font-weight: 700; }
+nav.tabs button[aria-selected=true] .pill { background: var(--tonal); color: var(--on-tonal); }
+@media (min-width: 900px) {
+  nav.tabs { position: sticky; top: 0; height: 100vh; grid-template-columns: none; grid-auto-rows: min-content; align-content: start; gap: 14px; padding: 96px 8px 16px; border-right: 1px solid var(--line); background: var(--surface); }
+}
+
+main { display: grid; gap: 16px; padding-top: 12px; }
+section[data-view] { display: grid; gap: 16px; align-content: start; }
+section[data-view][hidden] { display: none; }
+.sec-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+.sec-head h2 { font-size: 18px; }
+.hint { font-size: 13px; color: var(--muted); margin: 0; }
+
+/* Mosaicos */
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+@media (min-width: 600px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1100px) { .grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.tile { position: relative; text-align: left; border: 0; background: var(--surface); border-radius: var(--r-tile); padding: 14px 16px; min-height: 112px; display: grid; gap: 4px; align-content: start; min-width: 0; transition: background-color .15s, box-shadow .15s; }
+.tile:hover { box-shadow: 0 2px 8px var(--shadow); }
+.tile .nm { font-size: 13.5px; font-weight: 600; color: var(--muted); padding-right: 22px; }
+.tile .chev { position: absolute; top: 14px; right: 12px; color: var(--muted); }
+.tile .chev svg { width: 18px; height: 18px; }
+.tile .word { font-family: var(--f-display); font-size: 22px; font-weight: 700; display: flex; align-items: center; gap: 7px; line-height: 1.2; }
+.tile .word svg { width: 16px; height: 16px; flex: none; color: var(--brand); }
+.tile .val { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.tile[data-s=warn] { background: var(--warn-soft); box-shadow: inset 0 0 0 2px var(--warn); }
+.tile[data-s=bad] { background: var(--bad-soft); box-shadow: inset 0 0 0 2px var(--bad); }
+.tile[data-s=warn] .word, .tile[data-s=warn] .word svg { color: var(--warn); }
+.tile[data-s=bad] .word, .tile[data-s=bad] .word svg { color: var(--bad); }
+
+/* Mosaico de equipo: encendido = relleno tonal */
+.dev { display: grid; grid-template-columns: 44px 1fr; gap: 12px; align-items: center; min-height: 84px; padding: 12px 14px; }
+.dev .ic { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-2); color: var(--muted); }
+.dev .ic svg { width: 22px; height: 22px; }
+.dev .t { font-weight: 700; font-size: 15px; }
+.dev .d { font-size: 12.5px; color: var(--muted); }
+.dev[data-on=true] { background: var(--tonal); color: var(--on-tonal); }
+.dev[data-on=true] .ic { background: var(--brand); color: var(--on-brand); }
+.dev[data-on=true] .d { color: var(--on-tonal); }
+.dev[data-s=bad] .ic { background: var(--bad); color: var(--surface); }
+
+/* Resumen y avisos */
+.summary { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; background: var(--surface); border-radius: var(--r-tile); padding: 18px; }
+.summary .big { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: var(--tonal); color: var(--on-tonal); }
+.summary .big svg { width: 28px; height: 28px; }
+.summary h2 { font-size: 22px; }
+.summary[data-s=warn] { background: var(--warn-soft); box-shadow: inset 0 0 0 2px var(--warn); }
+.summary[data-s=warn] .big { background: var(--surface); color: var(--warn); }
+.summary[data-s=bad] { background: var(--bad-soft); box-shadow: inset 0 0 0 2px var(--bad); }
+.summary[data-s=bad] .big { background: var(--bad); color: var(--surface); }
+.alerts { display: grid; gap: 10px; }
+@media (min-width: 900px) { .alerts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.alert { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; background: var(--warn-soft); box-shadow: inset 0 0 0 2px var(--warn); border-radius: 20px; padding: 14px 16px; }
+.alert.bad { background: var(--bad-soft); box-shadow: inset 0 0 0 2px var(--bad); }
+.alert .ic { grid-row: span 3; color: var(--warn); padding-top: 2px; }
+.alert.bad .ic { color: var(--bad); }
+.alert .ic svg { width: 20px; height: 20px; }
+.alert .lv { font-size: 11.5px; font-weight: 700; letter-spacing: .6px; color: var(--warn); }
+.alert.bad .lv { color: var(--bad); }
+
+/* Píldoras, interruptores, botones */
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: var(--r-ctl); padding: 10px 18px; min-height: 44px; font-weight: 600; font-size: 14px; }
+.btn:hover:not(:disabled) { background: var(--surface-2); }
+.btn.primary { background: var(--brand); border-color: var(--brand); color: var(--on-brand); }
+.btn.primary:hover:not(:disabled) { filter: brightness(1.08); background: var(--brand); }
+.btn.tonal { background: var(--tonal); border-color: var(--tonal); color: var(--on-tonal); }
+.btn.danger { border-color: var(--bad); color: var(--bad); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btns { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+.chips button { flex: none; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 8px 14px; min-height: 40px; font-size: 13.5px; font-weight: 500; display: inline-flex; gap: 6px; align-items: center; }
+.chips button[aria-pressed=true] { background: var(--tonal); border-color: var(--tonal); color: var(--on-tonal); font-weight: 600; }
+.chips button[aria-pressed=true]::before { content: "✓"; font-weight: 700; }
+.seg { justify-self: start; display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; flex-wrap: wrap; }
+.seg button { border: 0; border-left: 1px solid var(--line); background: var(--surface); padding: 8px 16px; min-height: 40px; font-weight: 500; font-size: 14px; }
+.seg button:first-child { border-left: 0; }
+.seg button[aria-pressed=true] { background: var(--tonal); color: var(--on-tonal); font-weight: 600; }
+.switch { position: relative; width: 52px; height: 32px; border-radius: 999px; border: 2px solid var(--muted); background: var(--surface-2); flex: none; transition: background-color .15s; }
+.switch::after { content: ""; position: absolute; top: 6px; left: 6px; width: 16px; height: 16px; border-radius: 50%; background: var(--muted); transition: transform .15s, width .15s, height .15s, top .15s, left .15s; }
+.switch[aria-checked=true] { background: var(--brand); border-color: var(--brand); }
+.switch[aria-checked=true]::after { top: 2px; left: 2px; width: 24px; height: 24px; background: var(--on-brand); transform: translateX(20px); }
+.switch:disabled { opacity: .5; cursor: not-allowed; }
+.card { background: var(--surface); border-radius: var(--r-tile); padding: 18px; min-width: 0; }
+.card h2 { font-size: 18px; margin-bottom: 12px; }
+.row { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; }
+.row .t { font-weight: 700; }
+.row .d { font-size: 13px; color: var(--muted); }
+.confirm { background: var(--warn-soft); box-shadow: inset 0 0 0 2px var(--warn); border-radius: 18px; padding: 14px; display: grid; gap: 10px; font-size: 14px; margin-top: 12px; }
+
+/* Automatización */
+.carousel { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(220px, 1fr); gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 4px; }
+.next { scroll-snap-align: start; background: var(--surface); border-radius: var(--r-tile); padding: 14px 16px; display: grid; gap: 6px; align-content: start; }
+.next .when { font-size: 12px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; color: var(--brand); }
+.next .what { font-weight: 600; }
+.next .ic { width: 36px; height: 36px; border-radius: 50%; background: var(--tonal); color: var(--on-tonal); display: grid; place-items: center; }
+.next .ic svg { width: 20px; height: 20px; }
+.rules { display: grid; gap: 10px; }
+@media (min-width: 900px) { .rules { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.rule { background: var(--surface); border-radius: var(--r-tile); padding: 16px; display: grid; gap: 10px; align-content: start; }
+.rule .hd { display: grid; grid-template-columns: 40px 1fr; gap: 12px; align-items: center; }
+.rule .hd .ic { width: 40px; height: 40px; border-radius: 50%; background: var(--surface-2); display: grid; place-items: center; color: var(--muted); }
+.rule .hd .ic svg { width: 20px; height: 20px; }
+.rule .t { font-weight: 700; }
+.rule .lock { font-size: 12px; color: var(--muted); }
+.flow { display: grid; gap: 6px; font-size: 14px; }
+.flow div { display: grid; grid-template-columns: 76px 1fr; gap: 8px; }
+.flow b { font-size: 11.5px; letter-spacing: .5px; text-transform: uppercase; color: var(--muted); padding-top: 2px; }
+.fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px; }
+@media (min-width: 700px) { .fields.wide { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 380px) { .fields { grid-template-columns: minmax(0, 1fr); } }
+.field { display: grid; gap: 4px; font-size: 13.5px; }
+.field input { border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 9px 12px; min-height: 44px; width: 100%; font-variant-numeric: tabular-nums; }
+.profiles { display: flex; gap: 8px; flex-wrap: wrap; }
+.inline-form { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.inline-form input { flex: 1 1 180px; border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 9px 12px; min-height: 44px; }
+.msg-ok { color: var(--brand); font-weight: 600; } .msg-err { color: var(--bad); font-weight: 600; }
+
+/* Actividad */
+svg.plot { width: 100%; height: 220px; }
+svg.plot text { fill: var(--muted); font-size: 11px; font-family: var(--f-body); }
+svg.plot .grid { stroke: var(--line); }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin: 8px 0 2px; }
+.legend i { display: inline-block; width: 16px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+.stat { background: var(--surface-2); border-radius: 16px; padding: 10px 12px; }
+.stat b { display: block; font-family: var(--f-display); font-size: 20px; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 12px; color: var(--muted); }
+.feed { list-style: none; margin: 0; padding: 0; display: grid; }
+.feed li { display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); font-size: 14px; }
+.feed li:first-child { border-top: 0; }
+.feed .ic { width: 36px; height: 36px; border-radius: 50%; background: var(--surface-2); color: var(--muted); display: grid; place-items: center; }
+.feed .ic svg { width: 18px; height: 18px; }
+.feed li[data-k=w] .ic { background: var(--warn-soft); color: var(--warn); }
+.feed li[data-k=b] .ic { background: var(--bad-soft); color: var(--bad); }
+.feed time { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 13px; }
+.feed .who { display: block; font-size: 12px; color: var(--muted); }
+
+/* Hoja inferior */
+.sheet-bg { position: fixed; inset: 0; z-index: 40; background: var(--scrim); display: grid; align-items: end; justify-items: center; }
+@media (min-width: 900px) { .sheet-bg { align-items: center; } }
+.sheet { background: var(--surface); width: 100%; max-width: 640px; max-height: 88vh; overflow-y: auto; border-radius: 28px 28px 0 0;
+  padding: 12px max(18px, env(safe-area-inset-left, 0px)) calc(22px + env(safe-area-inset-bottom, 0px)) max(18px, env(safe-area-inset-right, 0px)); display: grid; gap: 14px; }
+@media (min-width: 900px) { .sheet { border-radius: 28px; width: calc(100% - 48px); padding-top: 20px; } }
+.sheet .grab { width: 36px; height: 4px; border-radius: 4px; background: var(--off); justify-self: center; }
+.sheet .hd { display: flex; justify-content: space-between; gap: 12px; align-items: start; }
+.sheet .hd h2 { font-size: 20px; }
+.sheet .word { font-family: var(--f-display); font-size: 28px; font-weight: 700; }
+.sheet .word[data-s=warn] { color: var(--warn); } .sheet .word[data-s=bad] { color: var(--bad); }
+.kv { display: grid; gap: 8px; margin: 0; }
+.kv div { background: var(--surface-2); border-radius: 16px; padding: 10px 14px; }
+.kv dt { font-size: 12px; font-weight: 600; letter-spacing: .5px; text-transform: uppercase; color: var(--muted); }
+.kv dd { margin: 2px 0 0; }
+.label { font-size: 12px; font-weight: 600; letter-spacing: .5px; text-transform: uppercase; color: var(--muted); }
+.dose { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+@media (max-width: 420px) { .dose { grid-template-columns: minmax(0, 1fr); } }
+.dose .btn { border-radius: 18px; display: grid; gap: 2px; text-align: left; }
+.dose .btn small { font-weight: 400; color: var(--muted); font-size: 12px; }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(92px + env(safe-area-inset-bottom, 0px)); z-index: 50; background: var(--fg); color: var(--bg); padding: 12px 18px; border-radius: 12px; font-size: 14px; font-weight: 500; box-shadow: 0 6px 20px var(--shadow); max-width: calc(100% - 32px); }
+@media (min-width: 900px) { .toast { bottom: 24px; } }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+details.card > summary { cursor: pointer; font-family: var(--f-display); font-weight: 700; font-size: 18px; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 32px; }
+details.card > summary::-webkit-details-marker { display: none; }
+details.card > summary::after { content: "+"; font-size: 22px; color: var(--muted); }
+details.card[open] > summary::after { content: "−"; }
+details.card[open] > summary { margin-bottom: 12px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+/* Ficha del cultivo con ilustración del módulo aeropónico por zonas */
+.hero { background: var(--surface); border-radius: 28px; padding: 18px; display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 760px) { .hero { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); align-items: center; } }
+.hero .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; color: var(--brand); }
+.hero h2 { font-size: 28px; margin: 2px 0 2px; }
+.hero .meta { font-size: 13.5px; color: var(--muted); }
+.status-line { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: center; margin-top: 14px; padding: 12px 14px; border-radius: 18px; background: var(--tonal); color: var(--on-tonal); }
+.status-line .big { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--surface); color: var(--brand); }
+.status-line .big svg { width: 20px; height: 20px; }
+.status-line b { font-size: 16px; display: block; }
+.status-line span.sub { font-size: 12.5px; }
+.status-line[data-s=warn] { background: var(--warn-soft); color: var(--fg); box-shadow: inset 0 0 0 2px var(--warn); }
+.status-line[data-s=warn] .big { color: var(--warn); }
+.status-line[data-s=bad] { background: var(--bad-soft); color: var(--fg); box-shadow: inset 0 0 0 2px var(--bad); }
+.status-line[data-s=bad] .big { background: var(--bad); color: var(--surface); }
+.diagram { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; }
+@media (max-width: 420px) { .diagram { grid-template-columns: minmax(0, 1fr); } .zones { grid-template-columns: repeat(3, minmax(0, 1fr)); min-width: 0; } .zone { grid-template-columns: minmax(0, 1fr); gap: 4px; } }
+.diagram svg { width: 100%; max-width: 300px; height: auto; justify-self: center; }
+.zones { display: grid; gap: 8px; min-width: 150px; }
+.zone { display: grid; grid-template-columns: 12px 1fr; gap: 8px; align-items: start; font-size: 13px; }
+.zone i { width: 12px; height: 12px; border-radius: 4px; margin-top: 3px; }
+.zone b { display: block; font-size: 13.5px; }
+.zone .st { display: inline-flex; align-items: center; gap: 4px; color: var(--muted); }
+.zone .st svg { width: 11px; height: 11px; }
+.zone[data-s=warn] .st { color: var(--warn); font-weight: 600; } .zone[data-s=bad] .st { color: var(--bad); font-weight: 600; }
+.mist circle { fill: var(--water-line); }
+.mist.on circle { animation: mist 1.6s ease-in-out infinite; }
+.mist.off { opacity: .15; }
+@keyframes mist { 0%,100% { opacity: .25 } 50% { opacity: 1 } }
+@media (prefers-reduced-motion: reduce) { .mist.on circle { animation: none; } }
+
+/* Mosaico de medición: valor + barra de rango (bullet graph) + estado */
+.meas { min-height: 0; gap: 6px; }
+.meas .num { font-family: var(--f-display); font-size: 30px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.05; }
+.meas .num small { font-size: 14px; font-weight: 500; color: var(--muted); margin-left: 3px; }
+.meas[data-s=warn] .num { color: var(--warn); } .meas[data-s=bad] .num { color: var(--bad); }
+.bullet { width: 100%; height: 16px; }
+.bullet .track { fill: var(--surface-2); } .bullet .ideal { fill: var(--band); stroke: var(--brand); stroke-width: 1; }
+.bullet .mark { fill: var(--fg); }
+.meas[data-s=warn] .bullet .mark { fill: var(--warn); } .meas[data-s=bad] .bullet .mark { fill: var(--bad); }
+.meas .state { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; }
+.meas .state svg { width: 13px; height: 13px; color: var(--brand); flex: none; }
+.meas .ideal { font-size: 12.5px; color: var(--muted); }
+.meas[data-s=warn] .state, .meas[data-s=warn] .state svg { color: var(--warn); }
+.meas[data-s=bad] .state, .meas[data-s=bad] .state svg { color: var(--bad); }
+.meas .eff { font-size: 12.5px; color: var(--fg); }
+
+/* Recetas */
+.recipes { display: grid; gap: 10px; }
+@media (min-width: 760px) { .recipes { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.recipe { border: 1px solid var(--line); border-radius: 20px; padding: 14px; display: grid; gap: 8px; align-content: start; }
+.recipe[data-active=true] { border: 2px solid var(--brand); background: var(--tonal); color: var(--on-tonal); }
+.recipe .top { display: flex; justify-content: space-between; gap: 8px; align-items: start; }
+.recipe .nm { font-family: var(--f-display); font-weight: 700; font-size: 17px; }
+.recipe .vals { font-size: 13.5px; font-variant-numeric: tabular-nums; }
+.recipe .src { font-size: 12px; color: var(--muted); }
+.recipe[data-active=true] .src { color: var(--on-tonal); }
+.badge-on { font-size: 12px; font-weight: 700; background: var(--brand); color: var(--on-brand); border-radius: 999px; padding: 3px 10px; white-space: nowrap; }
+.edit { display: grid; gap: 10px; background: var(--surface); color: var(--fg); border-radius: 14px; padding: 12px; }
+</style>
+
+<div class="shell">
+  <nav class="tabs" role="tablist" aria-label="Secciones">
+    <button role="tab" id="tab-monitoreo" data-tab="monitoreo" aria-selected="true"><span class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-7 4 14 3-7h4"/></svg></span>Monitoreo</button>
+    <button role="tab" id="tab-historial" data-tab="historial" aria-selected="false"><span class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19h16"/><path d="M5 15l4-5 4 3 6-7"/></svg></span>Historial</button>
+    <button role="tab" id="tab-control" data-tab="control" aria-selected="false"><span class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10"/><path d="M18 7h2"/><circle cx="16" cy="7" r="2"/><path d="M4 17h2"/><path d="M10 17h10"/><circle cx="8" cy="17" r="2"/></svg></span>Control</button>
+    <button role="tab" id="tab-recetas" data-tab="recetas" aria-selected="false"><span class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21v-8"/><path d="M12 13c0-4 3-7 8-7 0 5-3 8-8 8"/><path d="M12 15c0-3-2.5-5.5-7-5.5 0 4 2.5 6.5 7 6.5"/></svg></span>Recetas</button>
+  </nav>
+
+  <div class="app">
+    <div class="demo"><b>Demostración con datos simulados.</b> En el sistema real los datos llegan del ESP32 a través de Firebase. El reloj del cultivo va 30 veces más rápido para que se vean los ciclos.</div>
+
+    <header class="top">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21v-8"/><path d="M12 13c0-4 3-7 8-7 0 5-3 8-8 8"/><path d="M12 15c0-3-2.5-5.5-7-5.5 0 4 2.5 6.5 7 6.5"/></svg></div>
+        <div><h1>Sistema Aeropónico Vertical</h1><p id="profileLine">Receta: Lechuga</p></div>
+      </div>
+      <div class="conn" id="conn" data-s="ok" role="status"><span class="dot"></span><span id="connText">En línea</span></div>
+      <button type="button" class="icon-btn" id="btnSettings" aria-pressed="false" aria-label="Ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+    </header>
+
+    <main>
+      <!-- MONITOREO -->
+      <section data-view="monitoreo" aria-labelledby="tab-monitoreo">
+        <div class="hero">
+          <div>
+            <div class="eyebrow">Cultivo actual · 12 columnas aeropónicas al aire libre · 480 plantas</div>
+            <h2 id="cropName">Lechuga</h2>
+            <div class="meta" id="cropMeta">-</div>
+            <div class="status-line" id="summary" data-s="ok"><span class="big" id="sumIcon"></span><div><b id="sumTitle">Tus plantas están bien</b><span class="sub" id="sumSub">-</span></div></div>
+          </div>
+          <div class="diagram">
+            <svg id="plantSvg" viewBox="0 0 300 210" role="img" aria-label="Esquema de la torre aeropónica de PVC bajo malla raschel: plantas en los codos laterales, raíces dentro del tubo con niebla y depósito de solución en la base"></svg>
+            <div class="zones" id="zones"></div>
+          </div>
+        </div>
+        <div class="alerts" id="alerts" aria-live="polite"></div>
+        <div class="sec-head"><h2>Zona foliar · clima y luz</h2><p class="hint">Toca un mosaico para ver el detalle</p></div>
+        <div class="grid" id="varsAir"></div>
+        <div class="sec-head"><h2>Zona radicular · solución nutritiva</h2></div>
+        <div class="grid" id="varsRoot"></div>
+        <div class="sec-head"><h2>Actuadores</h2><span class="hint" id="modeLine">Modo automático</span></div>
+        <div class="grid" id="devs"></div>
+      </section>
+
+      <!-- HISTORIAL -->
+      <section data-view="historial" aria-labelledby="tab-historial" hidden>
+        <div class="card">
+          <div class="sec-head" style="margin:0 0 12px"><h2 id="histTitle">-</h2><div class="seg" id="histPeriod" role="group" aria-label="Periodo">
+            <button type="button" data-p="dia" aria-pressed="true">Día</button><button type="button" data-p="semana" aria-pressed="false">Semana</button><button type="button" data-p="mes" aria-pressed="false">Mes</button></div></div>
+          <div class="chips" id="histVars" role="group" aria-label="Variable"></div>
+          <div class="legend"><span><i style="background:var(--plot);height:3px"></i>Medición</span><span><i style="background:var(--band)"></i>Zona ideal</span><span id="histRange"></span></div>
+          <svg class="plot" id="histPlot" viewBox="0 0 640 220" role="img" aria-label="Gráfica del historial"></svg>
+          <div class="stats" id="histStats"></div>
+          <div class="btns" style="margin-top:12px"><button type="button" class="btn" id="btnCopy">Copiar datos para Excel</button><span class="hint" id="copyMsg" role="status"></span></div>
+          <textarea id="copyArea" class="sr" aria-hidden="true" tabindex="-1"></textarea>
+        </div>
+        <div class="card">
+          <h2>Bitácora de eventos</h2>
+          <ul class="feed" id="feed"></ul>
+        </div>
+      </section>
+
+      <!-- CONTROL -->
+      <section data-view="control" aria-labelledby="tab-control" hidden>
+        <div class="card">
+          <div class="row"><div><div class="t">Modo de operación: automático</div><div class="d" id="autoDesc">-</div></div>
+            <button type="button" class="switch" role="switch" id="swAuto" aria-checked="true" aria-label="Control automático"></button></div>
+          <div id="autoConfirm"></div>
+        </div>
+        <div class="sec-head"><h2>Próximas acciones</h2></div>
+        <div class="carousel" id="nexts"></div>
+        <div class="sec-head"><h2>Lazos de control</h2><p class="hint">Consignas de la receta en uso · se editan en Recetas</p></div>
+        <div class="rules" id="rules"></div>
+      </section>
+
+      <!-- RECETAS -->
+      <section data-view="recetas" aria-labelledby="tab-recetas" hidden>
+        <div class="card">
+          <div class="sec-head" style="margin:0 0 6px"><h2 style="margin:0">Recetas de cultivo</h2><div class="btns"><button type="button" class="btn" id="btnRestore" hidden>Restaurar recetas de fábrica</button><button type="button" class="btn tonal" id="btnNewProfile">+ Crear receta</button></div></div>
+          <p class="hint" style="margin-bottom:12px">Recetas para torre aeropónica vertical de PVC (hortalizas de hoja, aromáticas y fresa). Cada receta reúne las consignas de un cultivo: solución nutritiva, clima y luz, nebulización y dosificación. Activa la del cultivo sembrado.</p>
+          <div class="recipes" id="recipes"></div>
+          <p class="hint" id="profileMsg" role="status" style="margin-top:10px"></p>
+        </div>
+        <div class="card">
+          <h2>Ciclo de cultivo actual</h2>
+          <div class="fields"><label class="field" for="sowDate">Fecha de siembra o trasplante<input type="date" id="sowDate"></label><div class="field"><span>Días de cultivo</span><b id="sowDays" style="font-family:var(--f-display);font-size:26px">-</b></div></div>
+        </div>
+      </section>
+
+      <!-- AJUSTES (desde el encabezado) -->
+      <section data-view="ajustes" aria-label="Ajustes" hidden>
+        <div class="btns"><button type="button" class="btn" id="btnBack">← Volver</button></div>
+        <div class="card"><h2>Apariencia</h2>
+          <div class="seg" id="theme" role="group" aria-label="Tema">
+            <button type="button" data-th="system" aria-pressed="true">Como el celular</button><button type="button" data-th="light" aria-pressed="false">Claro</button><button type="button" data-th="dark" aria-pressed="false">Oscuro</button>
+          </div></div>
+        <details class="card" id="simCard" open><summary>Probar situaciones (demostración)</summary>
+          <p class="hint" style="margin-bottom:10px">Provoca un problema para ver cómo responde la app.</p>
+          <div class="btns">
+            <button type="button" class="btn" data-sim="drain">Vaciar el depósito</button>
+            <button type="button" class="btn" data-sim="fill">Rellenar el depósito</button>
+            <button type="button" class="btn" data-sim="heat">Ola de calor</button>
+            <button type="button" class="btn" data-sim="frost">Helada en la madrugada</button>
+            <button type="button" class="btn" data-sim="ec">CE elevada</button>
+            <button type="button" class="btn" data-sim="cut" id="btnCut">Cortar el WiFi</button>
+          </div>
+        </details>
+      </section>
+    </main>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<div id="sheetHost"></div>
+
+<script>
+(() => {
+const $ = id => document.getElementById(id);
+const store = {
+  get(k, d) { try { const v = localStorage.getItem("micultivo-" + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem("micultivo-" + k, JSON.stringify(v)); } catch (e) {} },
+};
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const fmt = (v, d = 1) => v == null ? "--" : v.toLocaleString("es-ES", { minimumFractionDigits: d, maximumFractionDigits: d, useGrouping: false });
+const hhmm = t => new Date(t).toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit", hour12: false });
+const dmy = t => new Date(t).toLocaleDateString("es-PE", { day: "numeric", month: "short" });
+const dur = s => s >= 60 ? Math.ceil(s / 60) + " min" : Math.max(0, Math.ceil(s)) + " s";
+
+const IC = {
+  ok: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`,
+  warn: `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3L22.5 20.5h-21z"/></svg>`,
+  bad: `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 2h8l6 6v8l-6 6H8l-6-6V8z"/></svg>`,
+  chev: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>`,
+  close: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>`,
+  drop: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg>`,
+  sun: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>`,
+  fan: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="1.5"/><path d="M12 10.5C12 6 13.5 3 16 3s3 3-1 5.5"/><path d="M13.3 12.8c3.9 2.2 5.8 5 4.5 7.1s-4.3 1-4.4-3.7"/><path d="M10.7 12.8C6.8 15 3.5 15.2 2.3 13s1.2-4.4 5.2-2"/></svg>`,
+  frost: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 2v20M4.9 7l14.2 10M4.9 17L19.1 7"/><path d="M9.5 3.5L12 6l2.5-2.5M9.5 20.5L12 18l2.5 2.5"/></svg>`,
+  flask: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6"/><path d="M10 3v6L4.5 19a1.5 1.5 0 0 0 1.3 2h12.4a1.5 1.5 0 0 0 1.3-2L14 9V3"/><path d="M7.5 15h9"/></svg>`,
+  shield: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z"/></svg>`,
+  info: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>`,
+  user: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>`,
+};
+
+/* ===== Recetas por cultivo (aptas para torre aeropónica vertical de PVC: hojas y aromáticas de porte bajo, y fresa) =====
+   Lechuga: consignas del informe (sección 1.1.3).
+   Albahaca, espinaca, perejil y fresa: Singh y Dunn (OSU Extension, HLA-6722). Las demás consignas parten de la lechuga hasta que el técnico las ajuste.
+   Cultivo al aire libre bajo malla raschel: no hay luces ni ventilador; la luz se mide (BH1750) y se resume como luz diaria (DLI, Mattson, 2016). */
+const BASE = { riegoOn: 15, pausaDia: 180, pausaNoche: 300, diaIni: "06:00", diaFin: "18:00", humMax: 80, heladaMin: 2, dliMin: 13, dliMax: 17,
+  aguaMin: 16, aguaMax: 24, aireMin: 10, aireMax: 27, doseEc: 2, dosePh: 1.5, mezcla: 10 };
+const OSU = "Singh y Dunn, OSU Extension";
+const BUILTIN = {
+  lechuga:  { ...BASE, name: "Lechuga",  phMin: 5.6, phMax: 6.2, ecMin: 0.8,  ecMax: 1.2,  src: "Informe, sección 1.1.3" },
+  albahaca: { ...BASE, name: "Albahaca", phMin: 5.5, phMax: 6.0, ecMin: 1.0,  ecMax: 1.6,  src: OSU },
+  espinaca: { ...BASE, name: "Espinaca", phMin: 6.0, phMax: 7.0, ecMin: 1.8,  ecMax: 2.3,  src: OSU + " · sensible a Pythium" },
+  perejil:  { ...BASE, name: "Perejil",  phMin: 6.0, phMax: 6.5, ecMin: 1.8,  ecMax: 2.2,  src: OSU },
+  fresa:    { ...BASE, name: "Fresa",    phMin: 5.8, phMax: 6.2, ecMin: 1.8,  ecMax: 2.2,  src: OSU + " (pH 6,0 ± 0,2)" },
+};
+const LECHUGA = BUILTIN.lechuga;
+const INTENSITY = { suave: [240, 400], normal: [180, 300], intensa: [120, 200] };
+let profiles = store.get("recetas-v5", null) || {};
+for (const [id, r] of Object.entries(BUILTIN)) if (!profiles[id]) profiles[id] = { ...r, builtin: true };
+let activeId = store.get("receta-activa", "lechuga"); if (!profiles[activeId]) activeId = "lechuga";
+const P = () => profiles[activeId];
+const saveProfiles = () => { store.set("recetas-v5", profiles); store.set("receta-activa", activeId); };
+let sowDate = store.get("siembra", null);
+
+/* ===== Simulador del ESP32 (reemplaza la lectura de Firebase en esta demostración) ===== */
+const SPEED = 30, STEP = 5 * 60000;
+const start = new Date(); start.setHours(10, 20, 0, 0);
+const sim = {
+  t: +start, s: { lvl: 62, ec: 0.78, ph: 6.02, at: 22.4, hum: 68, wt: 19.6, lux: 0, dli: 0 },
+  relays: { riego: true }, cycleAt: +start, dliYest: 14.2, day: null, frostOn: false,
+  dosing: null, lastDose: null, heat: 0, wifi: true,
+};
+const ui = { auto: true, last: Date.now(), events: [], tab: "monitoreo", prevTab: "monitoreo", hv: "ph", hp: "dia", autoConfirm: false, sheet: null, sheetConfirm: null, alertKeys: new Set() };
+
+const toMin = s => { const [h, m] = s.split(":").map(Number); return h * 60 + m; };
+function isDay(t) {
+  const d = new Date(t), m = d.getHours() * 60 + d.getMinutes(), on = toMin(P().diaIni), off = toMin(P().diaFin);
+  if (on === off) return true;
+  return on < off ? (m >= on && m < off) : (m >= on || m < off);
+}
+function minsTo(t, hm) { const d = new Date(t), now = d.getHours() * 60 + d.getMinutes(); let m = toMin(hm) - now; if (m <= 0) m += 1440; return m; }
+const noise = a => (Math.random() - .5) * 2 * a;
+/* Ayacucho, noviembre: aire de ~10 a ~22 °C; sol de 06:00 a 18:00. Bajo malla raschel de 65 % de sombra el BH1750 ve ~28 000 lx al mediodía (≈14 mol/m²·día). Depósito de 122,5 L: la solución sigue de cerca al aire. */
+const hourOf = t => { const d = new Date(t); return d.getHours() + d.getMinutes() / 60; };
+const airAt = h => 16.5 + 6 * Math.sin((h - 9) / 24 * 2 * Math.PI);
+const luxAt = (h, cloud = 1) => h > 6 && h < 18 ? 28000 * Math.sin((h - 6) / 12 * Math.PI) * cloud : 0;
+const PPFD_LUX = 54; /* luz solar: 54 lx ≈ 1 µmol·m⁻²·s⁻¹ (Runkle, 2012) */
+
+const hist = [];
+(function seed() {
+  const n = 30 * 288; let ph = 5.85, ec = 1.02, lvl = 96, acc = 0, yest = 14.2, cloud = 1, lastDay = null;
+  for (let i = n; i > 0; i--) {
+    const t = sim.t - i * STEP, d = new Date(t), h = d.getHours() + d.getMinutes() / 60;
+    if (d.getDate() !== lastDay) { if (lastDay != null) yest = acc; acc = 0; lastDay = d.getDate(); cloud = .92 + Math.random() * .14; }
+    const wave = Math.sin((h - 9) / 24 * 2 * Math.PI);
+    const at = airAt(h) + noise(.35), lux = luxAt(h, cloud) * (1 + noise(.06));
+    acc += lux / PPFD_LUX * STEP / 1000 / 1e6;
+    const hum = 70 - 9 * wave + noise(1.4), wt = 17.5 + 0.45 * (at - 16) + noise(.1);
+    ph += 0.0035 + noise(.004); if (ph > 6.18) ph -= 0.24;
+    ec -= 0.0021 + noise(.001); if (ec < 0.81) ec += 0.13;
+    lvl -= 0.024; if (lvl < 30) lvl = 97;
+    hist.push({ t, lvl: Math.max(0, lvl), ec, ph, at, hum: Math.min(95, hum), wt, lux, dli: yest });
+  }
+  const last = hist[hist.length - 1];
+  sim.dliYest = yest; sim.day = new Date(sim.t).getDate();
+  sim.s = { lvl: 62, ec: 0.78, ph: 6.02, at: last.at, hum: last.hum, wt: last.wt, lux: last.lux, dli: acc };
+})();
+
+function addEvent(kind, msg, who = "Sistema", ic = "info", t = sim.t) {
+  ui.events.unshift({ t, kind, msg, who, ic });
+  if (ui.events.length > 80) ui.events.length = 80;
+}
+addEvent("i", "Equipo conectado. Receta en uso: " + P().name, "Sistema", "info");
+
+function tick() {
+  if (!sim.wifi) { render(); return; }
+  const p = P(), R = sim.relays, s = sim.s, dt = 1000 * SPEED, prevT = sim.t;
+  sim.t += dt; const h = dt / 3600000, day = isDay(sim.t), hr = hourOf(sim.t);
+  if (new Date(sim.t).getDate() !== sim.day) {
+    sim.day = new Date(sim.t).getDate(); sim.dliYest = s.dli; s.dli = 0;
+    const ok = sim.dliYest >= p.dliMin && sim.dliYest <= p.dliMax;
+    addEvent(ok ? "i" : "w", `Luz del día cerrada: ${fmt(sim.dliYest)} mol/m² (${ok ? "en rango" : sim.dliYest < p.dliMin ? "baja" : "alta"})`, "Sensor de luz", "sun");
+  }
+  if (ui.auto) {
+    const pausa = day ? p.pausaDia : p.pausaNoche, lim = (R.riego ? p.riegoOn : pausa) * 1000;
+    if (sim.t - sim.cycleAt >= lim) { R.riego = !R.riego && s.lvl > 10; sim.cycleAt = sim.t; }
+    const mixing = sim.lastDose != null && sim.t - sim.lastDose < p.mezcla * 60000;
+    if (!mixing && !sim.dosing && s.lvl > 10) {
+      if (s.ec < p.ecMin) startDose("nut", "auto");
+      else if (s.ph > p.phMax) startDose("phdn", "auto");
+      else if (s.ph < p.phMin) startDose("phup", "auto");
+    }
+  }
+  if (s.lvl <= 10 && R.riego) { R.riego = false; addEvent("b", "Riego detenido: el depósito está casi vacío", "Protección", "shield"); }
+  if (sim.dosing && sim.t >= sim.dosing.until) finishDose();
+  sim.heat *= 1 - Math.min(1, h * .5);
+  const airT = airAt(hr) + sim.heat;
+  s.at += (airT - s.at) * Math.min(1, h * 1.5) + noise(.04);
+  const humT = 70 - 9 * Math.sin((hr - 9) / 24 * 2 * Math.PI) + (R.riego ? 2 : 0);
+  s.hum += (humT - s.hum) * Math.min(1, h * 2) + noise(.25);
+  s.wt += ((17.5 + 0.45 * (s.at - 16)) - s.wt) * Math.min(1, h * .6) + noise(.01);
+  s.lux = Math.max(0, luxAt(hr) * (1 + noise(.05)));
+  s.dli += s.lux / PPFD_LUX * (dt / 1000) / 1e6;
+  if (!sim.frostOn && s.at <= p.heladaMin) sim.frostOn = true; else if (sim.frostOn && s.at >= p.heladaMin + 1) sim.frostOn = false;
+  s.ph += 0.035 * h + noise(.002); s.ec -= 0.02 * h + noise(.001);
+  s.lvl -= (R.riego ? 1.2 : 0.35) * h;
+  s.hum = Math.min(99, Math.max(20, s.hum)); s.lvl = Math.max(0, Math.min(100, s.lvl));
+  if (Math.floor(sim.t / STEP) !== Math.floor(prevT / STEP)) hist.push({ t: sim.t, ...s, dli: sim.dliYest });
+  if (hist.length > 30 * 288 + 50) hist.shift();
+  ui.last = Date.now();
+  render();
+}
+const DOSES = { nut: { name: "nutrientes A y B (CE)" }, phup: { name: "pH+" }, phdn: { name: "pH−" } };
+function startDose(kind, who) {
+  const p = P(), secs = kind === "nut" ? p.doseEc : p.dosePh;
+  sim.dosing = { kind, until: sim.t + secs * 1000 * (kind === "nut" ? 8 : 4) };
+  addEvent("i", (kind === "nut" ? `Dosis de concentrado A y luego B (${fmt(secs, 0)} s cada uno)` : "Corrector para " + DOSES[kind].name + ` (${fmt(secs, 1)} s)`), who === "auto" ? "Automatización" : "Tú", who === "auto" ? "flask" : "user");
+}
+function finishDose() {
+  const s = sim.s, k = sim.dosing.kind;
+  if (k === "nut") { s.ec += 0.12; s.ph -= 0.04; } else if (k === "phdn") s.ph -= 0.18; else s.ph += 0.18;
+  sim.dosing = null; sim.lastDose = sim.t;
+}
+
+/* ===== Variables: valor, rango ideal y estado (En rango / Bajo / Alto) con su efecto en la planta (informe, tabla 1.3) ===== */
+const st = (s, label, eff = "") => ({ s, label, eff });
+const VARS = [
+  { k: "at", zone: "air", name: "Temperatura del aire", unit: "°C", d: 1, scale: () => [-5, 40],
+    eval(v, p) { if (v <= p.heladaMin) return st("bad", "Helada", "Riesgo de quemadura de hojas por helada"); if (v > p.aireMax) return st("warn", "Alto", "Estrés térmico: riesgo de espigado (bolting)"); if (v < p.aireMin) return st("warn", "Bajo", "La planta crece muy despacio"); return st("ok", "En rango"); },
+    what: "Temperatura del aire junto a las torres, medida a la sombra dentro de un protector solar.", ideal: p => `${p.aireMin} a ${p.aireMax} °C`,
+    does: p => `El cultivo está al aire libre, sin calefacción ni ventilador: el sistema avisa. Si el aire baja a ${p.heladaMin} °C lanza una alarma de helada.`, band: p => [p.aireMin, p.aireMax] },
+  { k: "hum", zone: "air", name: "Humedad relativa", unit: "%", d: 0, scale: () => [0, 100],
+    eval(v, p) { if (v > p.humMax) return st("warn", "Alto", "Mayor riesgo de enfermedades fúngicas"); return st("ok", "En rango"); },
+    what: "Humedad relativa del aire junto a las torres.", ideal: p => `hasta ${p.humMax} %`,
+    does: () => "Solo se vigila: si se mantiene alta muchas horas, revisa el follaje por hongos.", band: p => [0, p.humMax] },
+  { k: "dli", zone: "air", name: "Luz diaria (DLI)", unit: "mol/m²", d: 1, scale: () => [0, 30],
+    val: () => sim.dliYest,
+    eval(v, p) { const hoy = `Hoy van ${fmt(sim.s.dli)} mol/m² · ahora ${fmt(sim.s.lux / 1000)} klx`;
+      if (v > p.dliMax) return st("warn", "Alto", "Más riesgo de quemadura de bordes (tipburn). " + hoy); if (v < p.dliMin) return st("warn", "Bajo", "El cultivo crecerá más despacio. " + hoy); return st("ok", "En rango", hoy); },
+    what: "Luz útil para la fotosíntesis que recibieron las plantas ayer, bajo la malla raschel. El sensor BH1750 mide en lux y el sistema la acumula durante el día.", ideal: p => `${p.dliMin} a ${p.dliMax} mol/m² al día`,
+    does: () => "No acciona equipos: al cerrar cada día compara la luz acumulada con el rango y avisa. Si hay exceso, revisa que la malla cubra todas las torres.", band: p => [p.dliMin, p.dliMax] },
+  { k: "lvl", zone: "root", name: "Nivel del depósito", unit: "%", d: 0, scale: () => [0, 100],
+    eval(v) { if (v <= 10) return st("bad", "Muy bajo", "Nebulización detenida: la bomba no puede trabajar en seco"); if (v <= 25) return st("warn", "Bajo", "Rellena pronto el depósito"); return st("ok", "En rango"); },
+    what: "Cuánta solución nutritiva queda en el depósito.", ideal: () => "más de 25 %",
+    does: () => "Si baja del 10 %, detiene el riego para proteger la bomba.", band: () => [25, 100] },
+  { k: "ec", zone: "root", name: "Conductividad eléctrica (CE)", unit: "mS/cm", d: 2, scale: p => [0, Math.max(3, p.ecMax * 1.6)],
+    eval(v, p) { if (v > p.ecMax) return st("warn", "Alto", "Riesgo de quemadura de bordes (tipburn) por exceso de sales"); if (v < p.ecMin) return st("warn", "Bajo", v < p.ecMin * .75 ? "Déficit nutricional: revisa los concentrados A y B" : "Déficit nutricional; el sistema dosificará A y B"); return st("ok", "En rango"); },
+    what: "Concentración total de sales (nutrientes) disueltas en la solución.", ideal: p => `${fmt(p.ecMin)} a ${fmt(p.ecMax)} mS/cm`,
+    does: p => `Si está bajo, añade ${fmt(p.doseEc, 0)} s de concentrado A y luego ${fmt(p.doseEc, 0)} s de B, por separado para que no precipiten, y espera ${p.mezcla} min a que se mezclen. Si está alto, te pide añadir agua limpia.`, band: p => [p.ecMin, p.ecMax] },
+  { k: "ph", zone: "root", name: "pH de la solución", unit: "", d: 2, scale: () => [4, 8],
+    eval(v, p) { if (v > p.phMax) return st("warn", "Alto", "Menor disponibilidad de Fe y Mn (riesgo de clorosis)"); if (v < p.phMin) return st("warn", "Bajo", "Menor disponibilidad de Ca y Mg"); return st("ok", "En rango"); },
+    what: "Determina la disponibilidad de los nutrientes para la raíz.", ideal: p => `${fmt(p.phMin)} a ${fmt(p.phMax)}`,
+    does: p => `Añade corrector para subir o bajar el pH (${fmt(p.dosePh)} s), siempre después de corregir los nutrientes.`, band: p => [p.phMin, p.phMax] },
+  { k: "wt", zone: "root", name: "Temperatura de la solución", unit: "°C", d: 1, scale: () => [5, 35],
+    eval(v, p) { if (v > p.aguaMax) return st("warn", "Alto", "Menor oxígeno disuelto y riesgo de Pythium en raíces"); if (v < p.aguaMin) return st("warn", "Bajo", "Por debajo del rango recomendado: abriga el depósito"); return st("ok", "En rango"); },
+    what: "Temperatura de la solución nutritiva que llega a la cámara de raíces.", ideal: p => `${p.aguaMin} a ${p.aguaMax} °C`,
+    does: () => "No la controla directamente: te avisa para dar sombra o abrigo al depósito.", band: p => [p.aguaMin, p.aguaMax] },
+];
+function bullet(v, val, p) {
+  const [a, b] = v.scale(p), [i0, i1] = v.band(p), W = 200, x = n => Math.max(0, Math.min(W, (n - a) / (b - a) * W));
+  return `<svg class="bullet" viewBox="0 0 ${W} 16" preserveAspectRatio="none" aria-hidden="true"><rect class="track" x="0" y="4" width="${W}" height="8" rx="4"/>
+    <rect class="ideal" x="${x(i0)}" y="4" width="${Math.max(2, x(i1) - x(i0))}" height="8" rx="3" vector-effect="non-scaling-stroke"/>
+    <rect class="mark" x="${Math.min(W - 3, Math.max(0, x(val) - 1.5))}" y="0" width="3" height="16" rx="1.5"/></svg>`;
+}
+const V = k => VARS.find(v => v.k === k);
+const valOf = v => v.val ? v.val() : sim.s[v.k];
+
+/* ===== Equipos ===== */
+function devState(k) {
+  const p = P(), R = sim.relays, s = sim.s, pausa = isDay(sim.t) ? p.pausaDia : p.pausaNoche;
+  const left = ((R.riego ? p.riegoOn : pausa) * 1000 - (sim.t - sim.cycleAt)) / 1000;
+  const mixLeft = sim.lastDose ? (p.mezcla * 60000 - (sim.t - sim.lastDose)) / 1000 : 0;
+  if (k === "riego") return { name: "Nebulización", ic: "drop", on: R.riego, s: s.lvl <= 10 ? "bad" : "ok",
+    d: s.lvl <= 10 ? "Detenida por nivel crítico" : R.riego ? "Nebulizando" : ui.auto ? `En pausa · ${dur(left)}` : "Apagada" };
+  return { name: "Dosificación", ic: "flask", on: !!sim.dosing, d: sim.dosing ? `Añadiendo ${DOSES[sim.dosing.kind].name}` : mixLeft > 0 ? `Mezclando · ${dur(mixLeft)}` : "En espera" };
+}
+const DEVS = ["riego", "dosis"];
+
+/* ===== Avisos con acción (informe, 8.3) ===== */
+function alarms() {
+  const s = sim.s, p = P(), a = [];
+  if (!sim.wifi && Date.now() - ui.last > 35000) a.push({ key: "conn", lv: "bad", title: "Sin comunicación con el ESP32 (> 35 s)", act: "Verifica la alimentación eléctrica y la conexión WiFi del controlador." });
+  if (s.lvl <= 10) a.push({ key: "lvl2", lv: "bad", title: `Nivel del depósito crítico (${fmt(s.lvl, 0)} %)`, act: "Repón la solución nutritiva. La nebulización se detuvo para proteger la bomba." });
+  else if (s.lvl <= 25) a.push({ key: "lvl1", lv: "warn", title: `Nivel del depósito bajo (${fmt(s.lvl, 0)} %)`, act: "Programa la reposición de solución nutritiva." });
+  if (s.wt > p.aguaMax) a.push({ key: "wt", lv: "warn", title: `Temperatura de la solución alta (${fmt(s.wt)} °C)`, act: "Sombrea o enfría el depósito: baja el oxígeno disuelto y aumenta el riesgo de Pythium." });
+  else if (s.wt < p.aguaMin) a.push({ key: "wt", lv: "warn", title: `Temperatura de la solución baja (${fmt(s.wt)} °C)`, act: "Aísla o temperea el depósito." });
+  if (sim.frostOn) a.push({ key: "frost", lv: "bad", title: `Riesgo de helada (aire a ${fmt(s.at)} °C)`, act: "Cubre las torres con manta térmica agrícola y revisa las hojas al amanecer." });
+  else if (s.at < p.aireMin) a.push({ key: "at", lv: "warn", title: `Temperatura del aire baja (${fmt(s.at)} °C)`, act: `Vigila el pronóstico: si baja a ${p.heladaMin} °C hay riesgo de helada; ten lista la manta térmica.` });
+  if (s.at > p.aireMax) a.push({ key: "at", lv: "warn", title: `Temperatura del aire alta (${fmt(s.at)} °C)`, act: "Revisa que la malla raschel cubra todas las torres: riesgo de espigado." });
+  if (sim.dliYest > p.dliMax) a.push({ key: "dli", lv: "warn", title: `Luz diaria alta ayer (${fmt(sim.dliYest)} mol/m²)`, act: "Revisa que la malla raschel cubra todas las torres: el exceso de luz favorece el tipburn." });
+  else if (sim.dliYest < p.dliMin) a.push({ key: "dli", lv: "warn", title: `Luz diaria baja ayer (${fmt(sim.dliYest)} mol/m²)`, act: "La cosecha puede retrasarse. Si se repite muchos días, evalúa una malla de menor sombra o días nublados prolongados." });
+  if (s.ph > p.phMax + .5 || s.ph < p.phMin - .5) a.push({ key: "ph", lv: "warn", title: `pH fuera de consigna en más de 0,5 (${fmt(s.ph, 2)})`, act: "Verifica las reservas de pH+ y pH− y la calibración del sensor." });
+  if (s.ec > p.ecMax) a.push({ key: "ec", lv: "warn", title: `CE por encima de consigna (${fmt(s.ec, 2)} mS/cm)`, act: "Diluye la solución con agua limpia." });
+  else if (s.ec < p.ecMin * .75) a.push({ key: "ec", lv: "warn", title: `CE muy por debajo de consigna (${fmt(s.ec, 2)} mS/cm)`, act: "Verifica los frascos de concentrado A y B y sus bombas dosificadoras." });
+  return a;
+}
+
+/* ===== Esquema del módulo por zonas ===== */
+function worst(list) { return list.includes("bad") ? "bad" : list.includes("warn") ? "warn" : "ok"; }
+function renderPlant() {
+  const p = P(), s = sim.s, R = sim.relays;
+  const zAir = worst(VARS.filter(v => v.zone === "air").map(v => v.eval(valOf(v), p).s));
+  const zTank = worst(["lvl", "ec", "ph", "wt"].map(k => V(k).eval(s[k], p).s));
+  const zRoot = s.lvl <= 10 ? "bad" : "ok";
+  const lvl = Math.max(0, Math.min(100, s.lvl)), top = 170, bot = 204, wy = top + (bot - top) * (1 - lvl / 100);
+  const ports = [[40, -1], [64, 1], [88, -1], [112, 1], [136, -1], [160, 1]];
+  const plant = (y, d) => { const x = 150 + d * 30; return `<g transform="translate(${x} ${y})"><ellipse cx="${d * 6}" cy="2" rx="17" ry="9" fill="var(--leaf-2)"/><ellipse cx="${d * 12}" cy="-4" rx="11" ry="8" fill="var(--leaf)"/><ellipse cx="0" cy="-6" rx="10" ry="7" fill="var(--leaf)"/><path d="M${-d * 2} 0 l${d * 14} -6" stroke="var(--leaf-2)" stroke-width="1.4" stroke-linecap="round"/></g>`; };
+  const port = (y, d) => `<path d="M${150 + d * 14} ${y + 6} l${d * 12} -10 v8 l${-d * 12} 10z" fill="var(--off)"/>`;
+  const roots = (y, d) => `<path d="M${150 + d * 10} ${y + 6} q${-d * 6} 6 ${-d * 8} 14 M${150 + d * 8} ${y + 8} q${-d * 2} 8 ${-d * 4} 16" stroke="var(--root)" stroke-width="1.6" fill="none" stroke-linecap="round"/>`;
+  let mist = ""; for (let i = 0; i < 16; i++) { const x = 140 + (i * 7) % 20, y = 34 + (i * 29) % 132; mist += `<circle cx="${x}" cy="${y}" r="${1.3 + (i % 3) * .5}" style="animation-delay:${(i % 6) * .25}s"/>`; }
+  $("plantSvg").innerHTML = `
+    <g transform="translate(46 30)">${s.lux > 0 ? `<circle r="${8 + Math.min(1, s.lux / 28000) * 4}" fill="#f2c94c"/>` : `<path d="M4 -9 a9 9 0 1 0 6 13 a7 7 0 0 1 -6 -13z" fill="var(--off)"/>`}</g>
+    <path d="M70 7 H230" stroke="var(--muted)" stroke-width="2" stroke-dasharray="3 3" stroke-linecap="round"/>
+    <path d="M70 7 V14 M230 7 V14" stroke="var(--muted)" stroke-width="2" stroke-linecap="round"/>
+    <rect x="136" y="22" width="28" height="150" rx="6" fill="var(--chamber)" stroke="var(--muted)" stroke-width="1.5"/>
+    <rect x="132" y="16" width="36" height="9" rx="3" fill="var(--muted)"/>
+    ${ports.map(([y, d]) => roots(y, d)).join("")}
+    <g class="mist ${R.riego ? "on" : "off"}">${mist}</g>
+    ${ports.map(([y, d]) => port(y, d) + plant(y, d)).join("")}
+    <rect x="96" y="${top}" width="108" height="${bot - top}" rx="8" fill="var(--surface-2)" stroke="var(--line)"/>
+    <rect x="98" y="${Math.max(top + 2, wy)}" width="104" height="${Math.max(0, bot - 2 - Math.max(top + 2, wy))}" rx="6" fill="var(--water)"/>
+    <path d="M200 192 h16 v-180 h-60 v6" stroke="var(--muted)" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="236" y="11" font-size="9" fill="var(--muted)">malla 65 %</text>`;
+  const icon = z => IC[z];
+  const riego = s.lvl <= 10 ? "Nebulización detenida" : R.riego ? "Nebulizando" : "Nebulización en pausa";
+  $("zones").innerHTML = [
+    ["air", "var(--leaf)", "Zona foliar", zAir, zAir === "ok" ? "En rango" : "Revisar"],
+    ["root", "var(--root)", "Zona radicular", zRoot, riego],
+    ["tank", "var(--water)", "Depósito", zTank, `${fmt(s.lvl, 0)} % · ${zTank === "ok" ? "en rango" : zTank === "bad" ? "grave" : "revisar"}`],
+  ].map(([id, c, n, z, t]) => `<div class="zone" data-s="${z}"><i style="background:${c}"></i><div><b>${n}</b><span class="st">${icon(z)}${t}</span></div></div>`).join("");
+}
+function sowDays() {
+  if (!sowDate) { const d = new Date(sim.t - 18 * 864e5); sowDate = d.toISOString().slice(0, 10); }
+  return Math.max(0, Math.floor((sim.t - new Date(sowDate + "T00:00").getTime()) / 864e5));
+}
+
+/* ===== Render ===== */
+function render() {
+  const p = P(), s = sim.s, al = alarms();
+  const keys = new Set(al.map(x => x.key + x.lv));
+  for (const x of al) if (!ui.alertKeys.has(x.key + x.lv)) addEvent(x.lv === "bad" ? "b" : "w", x.title, "Aviso", x.lv);
+  ui.alertKeys = keys;
+
+  const since = Math.round((Date.now() - ui.last) / 1000), conn = $("conn");
+  if (sim.wifi) { conn.dataset.s = "ok"; $("connText").innerHTML = `En línea<span class="ctime"> · ${hhmm(sim.t)}</span>`; }
+  else if (since < 35) { conn.dataset.s = "wait"; $("connText").textContent = `Sin datos hace ${since} s`; }
+  else { conn.dataset.s = "lost"; $("connText").textContent = "Sin conexión"; }
+  $("profileLine").textContent = "Receta: " + p.name;
+
+  const bad = al.filter(x => x.lv === "bad").length, warn = al.length - bad, stt = bad ? "bad" : warn ? "warn" : "ok";
+  $("summary").dataset.s = stt; $("sumIcon").innerHTML = IC[stt];
+  $("sumTitle").textContent = bad ? (bad === 1 ? "1 alarma crítica activa" : `${bad} alarmas críticas activas`) + (warn ? ` · ${warn} advertencia${warn > 1 ? "s" : ""}` : "") : warn ? (warn === 1 ? "1 advertencia activa" : `${warn} advertencias activas`) : "Todas las variables dentro de consigna";
+  $("sumSub").textContent = (sim.wifi ? `Última lectura hace ${Math.min(since, 9)} s` : "Mostrando la última lectura recibida") + ` · ${isDay(sim.t) ? "de día" : "de noche"} · ${ui.auto ? "modo automático" : "modo manual"}`;
+  $("alerts").innerHTML = al.map(x => `<div class="alert ${x.lv === "bad" ? "bad" : ""}" role="${x.lv === "bad" ? "alert" : "note"}"><span class="ic">${IC[x.lv]}</span><span class="lv">${x.lv === "bad" ? "ALARMA CRÍTICA" : "ADVERTENCIA"}</span><b>${x.title}</b><span>${x.act}</span></div>`).join("");
+  $("cropName").textContent = p.name;
+  const days = sowDays();
+  $("cropMeta").textContent = `Día ${days} desde la siembra · consigna: pH ${fmt(p.phMin)}–${fmt(p.phMax)} · CE ${fmt(p.ecMin)}–${fmt(p.ecMax)} mS/cm`;
+  const tile = v => { const val = valOf(v), e = v.eval(val, p);
+    return `<button type="button" class="tile meas" data-var="${v.k}" data-s="${e.s}" aria-label="${v.name}: ${fmt(val, v.d)} ${v.unit}, ${e.label}. Ideal ${v.ideal(p)}. Ver detalle">
+      <span class="nm">${v.name}</span><span class="chev">${IC.chev}</span>
+      <span class="num">${fmt(val, v.d)}<small>${v.unit}</small></span>${bullet(v, val, p)}
+      <span class="state">${IC[e.s]}${e.label}</span><span class="ideal">Ideal: ${v.ideal(p)}</span>${e.eff ? `<span class="eff">${e.eff}</span>` : ""}</button>`; };
+  $("varsAir").innerHTML = VARS.filter(v => v.zone === "air").map(tile).join("");
+  $("varsRoot").innerHTML = VARS.filter(v => v.zone === "root").map(tile).join("");
+  renderPlant();
+  $("devs").innerHTML = DEVS.map(k => { const d = devState(k);
+    return `<button type="button" class="tile dev" data-dev="${k}" data-on="${d.on}" data-s="${d.s || "ok"}" aria-label="${d.name}: ${d.d}. Abrir controles">
+      <span class="ic">${IC[d.s === "bad" ? "bad" : d.ic]}</span><span><span class="t">${d.name}</span><br><span class="d">${d.d}</span></span></button>`; }).join("");
+  $("modeLine").textContent = ui.auto ? "Modo automático" : "Modo manual";
+
+  if (ui.tab === "historial") renderAct();
+  if (ui.tab === "control") renderAuto(false);
+  if (ui.sheet) renderSheet();
+}
+
+/* ===== Hoja inferior: detalle de variable o controles de un equipo ===== */
+let lastFocus;
+function openSheet(kind, key) { lastFocus = document.activeElement; ui.sheet = { kind, key }; ui.sheetConfirm = null; $("sheetHost").innerHTML = ""; renderSheet(); $("sheetClose")?.focus(); }
+function closeSheet() { ui.sheet = null; $("sheetHost").innerHTML = ""; lastFocus?.focus(); }
+function sheetFrame(title, body) {
+  return `<div class="sheet-bg" data-bg="1"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle"><div class="grab"></div>
+    <div class="hd"><h2 id="sheetTitle">${title}</h2><button type="button" class="icon-btn" id="sheetClose" data-close aria-label="Cerrar" style="background:var(--surface-2)">${IC.close}</button></div>
+    <div id="sheetBody" style="display:grid;gap:14px">${body}</div></div></div>`;
+}
+function renderSheet() {
+  const { kind, key } = ui.sheet, p = P(), host = $("sheetHost");
+  let title, body;
+  if (kind === "var") {
+    const v = V(key), val = valOf(v), e = v.eval(val, p);
+    title = v.name;
+    body = `<div class="meas" data-s="${e.s}" style="display:grid;gap:6px"><span class="num">${fmt(val, v.d)}<small>${v.unit}</small></span>${bullet(v, val, p)}<span class="state">${IC[e.s]}${e.label}</span><span class="ideal">Ideal: ${v.ideal(p)}</span>${e.eff ? `<span class="eff">${e.eff}</span>` : ""}</div>
+      <dl class="kv"><div><dt>Qué es</dt><dd>${v.what}</dd></div><div><dt>Rango ideal para ${esc(p.name.toLowerCase())}</dt><dd>${v.ideal(p)} <span class="hint">(${esc(p.src || "receta propia")})</span></dd></div><div><dt>Qué hace el sistema</dt><dd>${v.does(p)}</dd></div></dl>
+      <div><div class="label">Últimas 24 horas</div><svg class="plot" id="sheetPlot" viewBox="0 0 640 220" role="img" aria-label="Gráfica de 24 horas de ${v.name}"></svg></div>`;
+  } else {
+    const d = devState(key); title = d.name;
+    const blocked = key === "riego" && sim.s.lvl <= 10;
+    const mixLeft = sim.lastDose ? (p.mezcla * 60000 - (sim.t - sim.lastDose)) / 1000 : 0;
+    const status = `<div class="row"><div><div class="word" style="font-size:24px">${d.on ? (key === "dosis" ? "Dosificando" : key === "riego" ? "Nebulizando" : "Encendida") : (key === "dosis" ? "En espera" : key === "riego" && blocked ? "Detenida" : key === "riego" && ui.auto ? "En pausa" : "Apagada")}</div><p class="hint">${d.d}</p></div>
+      ${key !== "dosis" ? `<button type="button" class="switch" role="switch" data-eq="${key}" aria-checked="${d.on}" aria-label="${d.name}" ${ui.auto || blocked || !sim.wifi ? "disabled" : ""}></button>` : ""}</div>`;
+    const info = { riego: `Ciclo temporizado: ${p.riegoOn} s encendida, pausa de ${p.pausaDia} s (día) y ${p.pausaNoche} s (noche). Protección por nivel ≤ 10 %.`,
+      dosis: `Evalúa CE y pH en cada lectura. Para la CE dosifica ${fmt(p.doseEc, 0)} s de concentrado A y luego ${fmt(p.doseEc, 0)} s de B; para el pH, ${fmt(p.dosePh)} s de corrector. Espera ${p.mezcla} min de mezcla entre dosis.` }[key];
+    let ctl = "";
+    if (key === "dosis") {
+      const can = sim.wifi && sim.s.lvl > 10 && !sim.dosing && !(mixLeft > 0);
+      const why = !sim.wifi ? "Sin conexión con el cultivo." : sim.s.lvl <= 10 ? "No se puede: el depósito está casi vacío." : sim.dosing ? "Hay una dosis en curso." : mixLeft > 0 ? `Espera ${dur(mixLeft)} a que se mezcle la última dosis.` : "Añade una dosis si lo ves necesario.";
+      ctl = `<div class="label">Añadir a mano</div><p class="hint">${why}</p><div class="dose">
+        <button type="button" class="btn" data-dose="nut" ${can ? "" : "disabled"}>Nutrientes A + B<small>${fmt(p.doseEc, 0)} s de cada uno</small></button>
+        <button type="button" class="btn" data-dose="phup" ${can ? "" : "disabled"}>Subir pH<small>Dosis de ${fmt(p.dosePh)} s</small></button>
+        <button type="button" class="btn" data-dose="phdn" ${can ? "" : "disabled"}>Bajar pH<small>Dosis de ${fmt(p.dosePh)} s</small></button></div>`;
+    } else if (ui.auto) ctl = `<p class="hint">En modo automático lo gobierna el ESP32. Cambia a modo manual para operarlo.</p><div class="btns"><button type="button" class="btn tonal" data-c="manual-ask">Cambiar a modo manual</button></div>`;
+    else if (blocked) ctl = `<p class="hint">Bloqueado hasta que rellenes el depósito.</p>`;
+    const conf = { "manual": ["¿Cambiar a modo manual? Los lazos de control quedarán en pausa; la protección de la bomba por nivel sigue activa.", "manual-yes", "Sí, cambiar a manual"],
+      "riego-off": ["¿Detener la nebulización? Sin niebla, las raíces se deshidratan en pocos minutos.", "riego-yes", "Sí, apagar"],
+      ...(ui.sheetConfirm && ui.sheetConfirm.startsWith("dose:") ? { [ui.sheetConfirm]: [`¿Añadir una dosis para ${DOSES[ui.sheetConfirm.slice(5)].name}?`, "dose-yes", "Sí, añadir"] } : {}) }[ui.sheetConfirm];
+    body = status + `<dl class="kv"><div><dt>Cómo funciona</dt><dd>${info}</dd></div></dl>` + ctl +
+      (conf ? `<div class="confirm">${conf[0]}<div class="btns"><button type="button" class="btn primary" data-c="${conf[1]}">${conf[2]}</button><button type="button" class="btn" data-c="no">Cancelar</button></div></div>` : "");
+  }
+  if (host.firstChild) { $("sheetTitle").textContent = title; const sb = $("sheetBody"), y = sb.parentElement.scrollTop; const f = document.activeElement?.dataset?.c || document.activeElement?.dataset?.dose; sb.innerHTML = body; sb.parentElement.scrollTop = y; if (f) sb.querySelector(`[data-c="${f}"],[data-dose="${f}"]`)?.focus(); }
+  else host.innerHTML = sheetFrame(title, body);
+  if (kind === "var") drawPlot($("sheetPlot"), series(key, "dia"), V(key), p);
+}
+$("sheetHost").addEventListener("click", e => { if (e.target.dataset.bg) closeSheet(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && ui.sheet) closeSheet(); });
+
+let toastT;
+function toast(msg) { const t = $("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 2600); }
+function apply(label, fn) { toast("Aplicando…"); setTimeout(() => { fn(); toast("Listo: " + label); render(); }, 1200); }
+const NAMES = { riego: "riego" };
+
+document.addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.var) return openSheet("var", b.dataset.var);
+  if (b.dataset.dev) return openSheet("dev", b.dataset.dev);
+  if (b.dataset.close != null) return closeSheet();
+  if (b.dataset.sim) return simAction(b.dataset.sim);
+  if (b.id === "swAuto") {
+    if (ui.auto) { ui.autoConfirm = true; renderAuto(true); }
+    else apply("control automático activado", () => { ui.auto = true; sim.cycleAt = sim.t; addEvent("i", "Volviste al control automático", "Tú", "user"); });
+    return;
+  }
+  if (b.dataset.eq) {
+    const k = b.dataset.eq, on = sim.relays[k];
+    if (k === "riego" && on) { ui.sheetConfirm = "riego-off"; renderSheet(); return; }
+    apply(`${NAMES[k]} ${on ? "apagado" : "encendido"}`, () => { sim.relays[k] = !on; addEvent("i", `${NAMES[k][0].toUpperCase() + NAMES[k].slice(1)} ${on ? "apagado" : "encendido"} a mano`, "Tú", "user"); });
+    return;
+  }
+  if (b.dataset.dose) { ui.sheetConfirm = "dose:" + b.dataset.dose; renderSheet(); return; }
+  const c = b.dataset.c; if (!c) return;
+  if (c === "no") { ui.sheetConfirm = null; ui.autoConfirm = false; ui.sheet ? renderSheet() : renderAuto(true); }
+  if (c === "manual-ask") { ui.sheetConfirm = "manual"; renderSheet(); }
+  if (c === "manual-yes") { ui.sheetConfirm = null; ui.autoConfirm = false; apply("control manual activado", () => { ui.auto = false; addEvent("w", "Pasaste a control manual", "Tú", "user"); }); }
+  if (c === "riego-yes") { ui.sheetConfirm = null; apply("riego apagado", () => { sim.relays.riego = false; addEvent("w", "Riego apagado a mano", "Tú", "user"); }); }
+  if (c === "dose-yes") { const k = ui.sheetConfirm.slice(5); ui.sheetConfirm = null; apply(`dosis para ${DOSES[k].name} en curso`, () => startDose(k, "user")); }
+});
+
+/* ===== Gráficas ===== */
+function series(k, period) {
+  const now = sim.t;
+  if (period === "dia") return hist.filter(r => r.t > now - 864e5).map(r => ({ t: r.t, v: r[k] }));
+  const span = period === "semana" ? 7 * 864e5 : 30 * 864e5, bucket = period === "semana" ? 36e5 : 4 * 36e5, out = [];
+  let cur = null;
+  for (const r of hist) {
+    if (r.t <= now - span) continue;
+    const b = Math.floor(r.t / bucket) * bucket;
+    if (!cur || cur.t !== b) { cur && out.push({ t: cur.t, v: cur.sum / cur.n }); cur = { t: b, sum: 0, n: 0 }; }
+    cur.sum += r[k]; cur.n++;
+  }
+  cur && out.push({ t: cur.t, v: cur.sum / cur.n });
+  return out;
+}
+function niceStep(range) { const raw = range / 4, m = Math.pow(10, Math.floor(Math.log10(raw))), n = raw / m; return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * m; }
+function drawPlot(svg, pts, v, p) {
+  if (!svg) return;
+  const W = Math.max(300, Math.round(svg.getBoundingClientRect().width) || 640), H = 220, L = 44, Rm = 12, T = 10, B = 26;
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  if (pts.length < 2) { svg.innerHTML = `<text x="${W / 2}" y="110" text-anchor="middle">Aún no hay datos</text>`; return; }
+  const [b0, b1] = v.band(p), vals = pts.map(x => x.v);
+  let lo = Math.min(...vals, b0), hi = Math.max(...vals, b1);
+  if (v.k === "lvl") { lo = 0; hi = 100; } else if (v.k === "hum") { lo = Math.min(lo, 40); hi = Math.min(100, Math.max(hi, 90)); }
+  const pad = (hi - lo) * .08 || .5; if (v.k !== "lvl") { lo -= pad; hi += pad; }
+  const step = niceStep(hi - lo); lo = Math.floor(lo / step) * step; hi = Math.ceil(hi / step) * step;
+  const t0 = pts[0].t, t1 = pts[pts.length - 1].t;
+  const x = t => L + (W - L - Rm) * (t - t0) / (t1 - t0 || 1), y = val => T + (H - T - B) * (1 - (val - lo) / (hi - lo));
+  let g = `<rect x="${L}" y="${y(Math.min(b1, hi))}" width="${W - L - Rm}" height="${Math.max(0, y(Math.max(b0, lo)) - y(Math.min(b1, hi)))}" fill="var(--band)"/>`;
+  const dec = step < 0.1 ? 2 : step < 1 ? 1 : 0;
+  for (let val = lo; val <= hi + step / 2; val += step) g += `<line class="grid" x1="${L}" x2="${W - Rm}" y1="${y(val)}" y2="${y(val)}"/><text x="${L - 6}" y="${y(val) + 4}" text-anchor="end">${fmt(val, dec)}</text>`;
+  const span = t1 - t0, lab = span > 3 * 864e5 ? dmy : hhmm;
+  for (let i = 0; i <= 4; i++) { const t = t0 + span * i / 4; g += `<text x="${x(t)}" y="${H - 6}" text-anchor="${i === 0 ? "start" : i === 4 ? "end" : "middle"}">${lab(t)}</text>`; }
+  g += `<polyline points="${pts.map(q => x(q.t).toFixed(1) + "," + y(q.v).toFixed(1)).join(" ")}" fill="none" stroke="var(--plot)" stroke-width="2.2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>`;
+  const e = pts[pts.length - 1]; g += `<circle cx="${x(e.t)}" cy="${y(e.v)}" r="4.5" fill="var(--plot)" stroke="var(--surface)" stroke-width="2"/>`;
+  svg.innerHTML = g;
+}
+
+/* ===== Actividad ===== */
+function renderAct() {
+  const v = V(ui.hv), p = P(), pts = series(v.k, ui.hp);
+  $("histVars").innerHTML = VARS.map(x => `<button type="button" data-hv="${x.k}" aria-pressed="${x.k === ui.hv}">${x.name}</button>`).join("");
+  document.querySelectorAll("#histPeriod button").forEach(b => b.setAttribute("aria-pressed", b.dataset.p === ui.hp));
+  $("histTitle").textContent = v.name + (v.unit ? ` (${v.unit})` : "");
+  $("histRange").textContent = { dia: "Últimas 24 h", semana: "7 días · promedio por hora", mes: "30 días · promedio cada 4 h" }[ui.hp];
+  drawPlot($("histPlot"), pts, v, p);
+  const vals = pts.map(q => q.v), avg = vals.reduce((a, b) => a + b, 0) / (vals.length || 1);
+  $("histStats").innerHTML = [["Promedio", avg], ["Mínimo", Math.min(...vals)], ["Máximo", Math.max(...vals)]].map(([n, val]) => `<div class="stat"><b>${fmt(val, v.d)}</b><span>${n}</span></div>`).join("");
+  $("feed").innerHTML = ui.events.slice(0, 20).map(ev => `<li data-k="${ev.kind}"><span class="ic">${IC[ev.ic] || IC.info}</span><span>${esc(ev.msg)}<span class="who">${esc(ev.who)}</span></span><time>${hhmm(ev.t)}</time></li>`).join("");
+}
+$("histVars").addEventListener("click", e => { const b = e.target.closest("[data-hv]"); if (b) { ui.hv = b.dataset.hv; renderAct(); } });
+$("histPeriod").addEventListener("click", e => { const b = e.target.closest("[data-p]"); if (b) { ui.hp = b.dataset.p; renderAct(); } });
+$("btnCopy").onclick = async () => {
+  const v = V(ui.hv), rows = series(v.k, ui.hp);
+  const csv = "fecha;hora;" + v.name + (v.unit ? " (" + v.unit + ")" : "") + "\n" + rows.map(r => `${new Date(r.t).toLocaleDateString("es-PE")};${hhmm(r.t)};${fmt(r.v, v.d)}`).join("\n");
+  try { await navigator.clipboard.writeText(csv); $("copyMsg").textContent = `Copiadas ${rows.length} filas. Pégalas en Excel.`; }
+  catch (e) { const a = $("copyArea"); a.value = csv; a.classList.remove("sr"); a.style.cssText = "width:100%;height:120px;margin-top:8px;border-radius:12px"; a.select(); $("copyMsg").textContent = "Selecciona el texto y cópialo con Ctrl+C."; }
+};
+
+/* ===== Automatización ===== */
+function renderAuto(full) {
+  const p = P(), s = sim.s, R = sim.relays;
+  $("swAuto").setAttribute("aria-checked", ui.auto); $("swAuto").closest(".row").querySelector(".t").textContent = "Modo de operación: " + (ui.auto ? "automático" : "manual");
+  $("autoDesc").textContent = ui.auto ? "El ESP32 ejecuta los lazos de control de la receta (nebulización y dosificación de CE y pH) y vigila la luz diaria y el riesgo de helada." : "Operación manual de actuadores. Si se pierde la comunicación durante 5 min, el ESP32 vuelve a modo automático.";
+  $("autoConfirm").innerHTML = ui.autoConfirm ? `<div class="confirm">¿Cambiar a modo manual? Los lazos de control quedarán en pausa; la protección de la bomba por nivel sigue activa.
+    <div class="btns"><button type="button" class="btn primary" data-c="manual-yes">Sí, cambiar a manual</button><button type="button" class="btn" data-c="no">Cancelar</button></div></div>` : "";
+  const pausa = isDay(sim.t) ? p.pausaDia : p.pausaNoche, left = ((R.riego ? p.riegoOn : pausa) * 1000 - (sim.t - sim.cycleAt)) / 1000;
+  const mixLeft = sim.lastDose ? (p.mezcla * 60000 - (sim.t - sim.lastDose)) / 1000 : 0;
+  const nx = !ui.auto ? [{ ic: "user", when: "Modo manual", what: "Lazos de control en pausa hasta volver a modo automático" }] : [
+    { ic: "drop", when: s.lvl <= 10 ? "Detenida" : R.riego ? "Ahora" : "En " + dur(left), what: s.lvl <= 10 ? "Nebulización bloqueada hasta reponer el depósito" : R.riego ? `Nebulización en curso (${p.riegoOn} s)` : "Próxima nebulización" },
+    { ic: "sun", when: "A las 00:00", what: `Cierre de la luz del día (hoy van ${fmt(s.dli)} mol/m²)` },
+    { ic: "flask", when: mixLeft > 0 ? "En " + dur(mixLeft) : "Próxima lectura", what: "Evaluación de CE y pH para dosificar" },
+    { ic: "frost", when: sim.frostOn ? "Ahora" : "Vigilando", what: sim.frostOn ? `Alarma de helada activa: se apaga al subir a ${p.heladaMin + 1} °C` : `Alarma de helada si el aire baja a ${p.heladaMin} °C (ahora ${fmt(s.at)} °C)` },
+  ];
+  $("nexts").innerHTML = nx.map(n => `<div class="next"><span class="ic">${IC[n.ic]}</span><span class="when">${n.when}</span><span class="what">${n.what}</span></div>`).join("");
+  if (!full) return;
+  renderRecipes();
+  const rule = (ic, t, when, then, lock = "") => `<div class="rule"><div class="hd"><span class="ic">${IC[ic]}</span><div><div class="t">${t}</div>${lock ? `<div class="lock">${lock}</div>` : ""}</div></div>
+    <div class="flow"><div><b>Cuando</b><span>${when}</span></div><div><b>Entonces</b><span>${then}</span></div></div></div>`;
+  $("rules").innerHTML = [
+    rule("drop", "Nebulización temporizada", `pasan ${p.pausaDia} s de pausa de día (${p.diaIni}–${p.diaFin}) o ${p.pausaNoche} s de noche`, `nebuliza durante ${p.riegoOn} s`),
+    rule("flask", "Dosificación de CE y pH", `CE < ${fmt(p.ecMin)} mS/cm o pH fuera de ${fmt(p.phMin)}–${fmt(p.phMax)}`, `dosifica (A y luego B, ${fmt(p.doseEc, 0)} s cada uno; pH ${fmt(p.dosePh)} s); espera ${p.mezcla} min de mezcla; corrige CE antes que pH`),
+    rule("sun", "Luz diaria (DLI)", "termina el día (00:00)", `compara la luz acumulada con ${fmt(p.dliMin, 0)}–${fmt(p.dliMax, 0)} mol/m² y avisa si queda fuera`, "Solo vigila: la malla se maneja a mano"),
+    rule("frost", "Aviso de helada con histéresis", `T aire ≤ ${p.heladaMin} °C`, `lanza alarma crítica; se apaga al subir a ${p.heladaMin + 1} °C`, "Solo avisa: no hay calefacción"),
+    rule("shield", "Protección de la bomba", "nivel del depósito ≤ 10 %", "detiene la nebulización y genera alarma crítica", "Siempre activa, también en modo manual"),
+  ].join("");
+}
+let editing = null, delAsk = null;
+const RFIELDS = [
+  ["Solución nutritiva", [["phMin", "pH mínimo"], ["phMax", "pH máximo"], ["ecMin", "CE mínima (mS/cm)"], ["ecMax", "CE máxima (mS/cm)"], ["aguaMin", "T solución mín. (°C)"], ["aguaMax", "T solución máx. (°C)"]]],
+  ["Clima y luz", [["aireMin", "T aire mín. (°C)"], ["aireMax", "T aire máx. (°C)"], ["heladaMin", "Alarma de helada (°C)"], ["humMax", "HR máxima (%)"], ["dliMin", "Luz diaria mín. (mol/m²)"], ["dliMax", "Luz diaria máx. (mol/m²)"]]],
+  ["Nebulización", [["riegoOn", "Encendido (s)"], ["pausaDia", "Pausa diurna (s)"], ["pausaNoche", "Pausa nocturna (s)"], ["diaIni", "Inicio del día", "time"], ["diaFin", "Fin del día", "time"]]],
+  ["Dosificación", [["doseEc", "Pulso de A y de B (s)"], ["dosePh", "Pulso de pH (s)"], ["mezcla", "Espera de mezcla (min)"]]],
+];
+function renderRecipes() {
+  const keys = RFIELDS.flatMap(g => g[1].map(f => f[0]));
+  $("recipes").innerHTML = Object.entries(profiles).map(([id, r]) => {
+    const active = id === activeId, orig = BUILTIN[id], modified = r.builtin && orig && ["name", ...keys].some(k => r[k] !== orig[k]);
+    const val = (k, t) => t === "time" ? r[k] : fmt(r[k], k.startsWith("ec") || k.startsWith("ph") ? 2 : Number.isInteger(r[k]) ? 0 : 1);
+    const edit = `<div class="edit">
+        <label class="field" for="ed-name">Nombre del cultivo<input type="text" id="ed-name" value="${esc(r.name)}" maxlength="30"></label>
+        ${RFIELDS.map(([g, fs]) => `<div class="label">${g}</div><div class="fields wide">${fs.map(([k, n, t]) => `<label class="field" for="ed-${k}">${n}<input type="${t === "time" ? "time" : "text"}" ${t ? "" : 'inputmode="decimal"'} id="ed-${k}" value="${val(k, t)}"></label>`).join("")}</div>`).join("")}
+        <div class="btns"><button type="button" class="btn primary" data-rsave="${id}">Guardar receta</button><button type="button" class="btn" data-rcancel="1">Cancelar</button>
+          ${modified ? `<button type="button" class="btn" data-rreset="${id}">Restablecer valores de la fuente</button>` : ""}</div>
+        <p class="hint" id="ed-msg" role="status"></p></div>`;
+    const ask = delAsk === id ? `<div class="confirm">¿Eliminar la receta «${esc(r.name)}»? Esta acción no se puede deshacer${r.builtin ? " (podrás restaurarla desde «Restaurar recetas de fábrica»)" : ""}.
+        <div class="btns"><button type="button" class="btn primary" data-rdelyes="${id}">Sí, eliminar</button><button type="button" class="btn" data-rcancel="1">Cancelar</button></div></div>` : "";
+    return `<div class="recipe" data-active="${active}">
+      <div class="top"><span class="nm">${esc(r.name)}</span>${active ? `<span class="badge-on">En uso</span>` : ""}</div>
+      <div class="vals">pH ${fmt(r.phMin)}–${fmt(r.phMax)} · CE ${fmt(r.ecMin)}–${fmt(r.ecMax)} mS/cm<br>T aire ${r.aireMin}–${r.aireMax} °C · Luz ${fmt(r.dliMin, 0)}–${fmt(r.dliMax, 0)} mol/m²·día · Nebulización ${r.riegoOn} s / ${r.pausaDia} s</div>
+      <div class="src">${r.builtin ? "Fuente: " + esc(r.src) + (modified ? " · modificada" : "") : "Receta propia"}</div>
+      ${editing === id ? edit : delAsk === id ? ask : `<div class="btns">${active ? "" : `<button type="button" class="btn primary" data-ruse="${id}">Usar esta receta</button>`}<button type="button" class="btn" data-redit="${id}">Editar</button>
+        <button type="button" class="btn danger" data-rdel="${id}" ${active ? `disabled title="Activa otra receta antes de eliminar esta"` : ""}>Eliminar</button></div>${active ? `<p class="hint" style="font-size:12px">Para eliminarla, activa antes otra receta.</p>` : ""}`}
+    </div>`;
+  }).join("");
+  const missing = Object.keys(BUILTIN).filter(id => !profiles[id]);
+  $("btnRestore").hidden = !missing.length;
+  $("btnRestore").textContent = `Restaurar recetas de fábrica (${missing.length})`;
+  $("sowDate").value = sowDate || ""; $("sowDays").textContent = sowDays() + " días";
+}
+const num = id => parseFloat(($(id).value || "").replace(",", "."));
+$("recipes").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return; const m = $("profileMsg");
+  if (b.dataset.ruse) { activeId = b.dataset.ruse; saveProfiles(); addEvent("i", "Receta activada: " + P().name, "Tú", "user"); m.className = "msg-ok"; m.textContent = `Receta de ${P().name} activada. El ESP32 tomará las consignas en menos de un minuto.`; render(); renderRecipes(); }
+  if (b.dataset.redit) { editing = b.dataset.redit; delAsk = null; renderRecipes(); $("ed-name").focus(); }
+  if (b.dataset.rcancel) { editing = null; delAsk = null; renderRecipes(); }
+  if (b.dataset.rdel) { delAsk = b.dataset.rdel; editing = null; renderRecipes(); }
+  if (b.dataset.rdelyes) { const id = b.dataset.rdelyes, n = profiles[id].name; if (id === activeId) return; delete profiles[id]; delAsk = null; saveProfiles(); m.className = "msg-ok"; m.textContent = `Receta «${n}» eliminada.`; addEvent("w", "Receta eliminada: " + n, "Tú", "user"); renderRecipes(); }
+  if (b.dataset.rreset) { const id = b.dataset.rreset; profiles[id] = { ...BUILTIN[id], builtin: true }; editing = null; saveProfiles(); m.className = "msg-ok"; m.textContent = `Receta de ${profiles[id].name} restablecida a los valores de su fuente.`; render(); renderRecipes(); }
+  if (b.dataset.rsave) {
+    const id = b.dataset.rsave, name = $("ed-name").value.trim(), v = {}, errs = [];
+    for (const [, fs] of RFIELDS) for (const [k, n, t] of fs) {
+      if (t === "time") { const x = $("ed-" + k).value; if (/^\d{2}:\d{2}$/.test(x)) v[k] = x; else errs.push(`«${n}» debe tener formato HH:MM.`); }
+      else { const x = num("ed-" + k); if (!Number.isFinite(x) || (x < 0 && k !== "heladaMin")) errs.push(`«${n}» debe ser un número.`); else v[k] = x; }
+    }
+    if (!name) errs.push("Escribe el nombre del cultivo.");
+    if (Object.entries(profiles).some(([k, x]) => k !== id && x.name.toLowerCase() === name.toLowerCase())) errs.push("Ya hay una receta con ese nombre.");
+    if (!errs.length) {
+      if (v.phMin >= v.phMax) errs.push("pH mínimo debe ser menor que pH máximo.");
+      if (v.phMin < 3 || v.phMax > 9) errs.push("El pH debe estar entre 3 y 9.");
+      if (v.ecMin >= v.ecMax) errs.push("CE mínima debe ser menor que CE máxima.");
+      if (v.aguaMin >= v.aguaMax) errs.push("T solución mínima debe ser menor que la máxima.");
+      if (v.aireMin >= v.aireMax) errs.push("T aire mínima debe ser menor que la máxima.");
+      if (v.dliMin >= v.dliMax) errs.push("Luz diaria mínima debe ser menor que la máxima.");
+      if (v.heladaMin >= v.aireMin) errs.push("La alarma de helada debe estar por debajo de la T aire mínima.");
+      if (v.riegoOn < 1) errs.push("La nebulización debe durar al menos 1 s.");
+      if (v.pausaDia > 1800 || v.pausaNoche > 1800) errs.push("Pausas mayores de 30 min ponen en riesgo las raíces.");
+    }
+    if (errs.length) { $("ed-msg").className = "msg-err"; $("ed-msg").textContent = errs.join(" "); return; }
+    Object.assign(profiles[id], { name, ...v }); editing = null; saveProfiles(); m.className = "msg-ok"; m.textContent = `Receta «${name}» guardada.`; addEvent("i", "Receta modificada: " + name, "Tú", "user"); render(); renderRecipes();
+  }
+});
+$("btnRestore").onclick = () => {
+  const missing = Object.keys(BUILTIN).filter(id => !profiles[id]);
+  for (const id of missing) profiles[id] = { ...BUILTIN[id], builtin: true };
+  const ordered = {}; for (const id of Object.keys(BUILTIN)) ordered[id] = profiles[id]; for (const [id, r] of Object.entries(profiles)) if (!ordered[id]) ordered[id] = r;
+  profiles = ordered; saveProfiles(); $("profileMsg").className = "msg-ok"; $("profileMsg").textContent = `Se restauraron ${missing.length} recetas de fábrica.`; renderRecipes();
+};
+$("btnNewProfile").onclick = () => {
+  let n = 1, name; do { name = "Mi receta " + n++; } while (Object.values(profiles).some(x => x.name === name));
+  const id = "r" + Date.now(); profiles[id] = { ...P(), name, builtin: false, src: "" }; delete profiles[id].builtin; saveProfiles();
+  editing = id; renderRecipes(); $("ed-name").select(); $("profileMsg").className = "hint"; $("profileMsg").textContent = `Nueva receta creada a partir de ${P().name}. Asígnale el nombre del cultivo y ajusta sus consignas.`;
+};
+$("sowDate").onchange = () => { sowDate = $("sowDate").value || null; store.set("siembra", sowDate); renderRecipes(); render(); };
+
+/* ===== Ajustes ===== */
+function applyTheme(t) {
+  if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t); else document.documentElement.removeAttribute("data-theme");
+  document.querySelectorAll("#theme button").forEach(b => b.setAttribute("aria-pressed", b.dataset.th === t));
+}
+applyTheme(store.get("theme", "system"));
+$("theme").addEventListener("click", e => { const b = e.target.closest("[data-th]"); if (b) { applyTheme(b.dataset.th); store.set("theme", b.dataset.th); } });
+
+function simAction(a) {
+  const s = sim.s;
+  if (a === "drain") { s.lvl = 8; toast("Depósito al 8 %"); }
+  if (a === "fill") { s.lvl = 98; sim.heat = 0; toast("Depósito lleno"); addEvent("i", "Depósito rellenado", "Tú", "user"); }
+  if (a === "heat") { sim.heat = 9; s.at = 28.5; s.wt = 25; toast("Ola de calor simulada"); }
+  if (a === "frost") { sim.heat = -15; s.at = 1.2; s.wt = 15.2; toast("Helada simulada: el aire bajó a 1,2 °C"); }
+  if (a === "ec") { s.ec = 1.45; toast("CE elevada simulada"); }
+  if (a === "cut") {
+    sim.wifi = !sim.wifi; $("btnCut").textContent = sim.wifi ? "Cortar el WiFi" : "Restablecer el WiFi";
+    toast(sim.wifi ? "WiFi restablecido" : "WiFi cortado: el aviso aparece a los 35 s");
+    if (sim.wifi) ui.last = Date.now();
+  }
+  if (a !== "cut" || sim.wifi) tick(); else render();
+}
+
+/* ===== Navegación ===== */
+const TABS = ["monitoreo", "historial", "control", "recetas", "ajustes"];
+function show(tab) {
+  if (tab !== "ajustes") ui.prevTab = tab;
+  ui.tab = tab;
+  document.querySelectorAll("nav.tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === tab));
+  $("btnSettings").setAttribute("aria-pressed", tab === "ajustes");
+  document.querySelectorAll("[data-view]").forEach(v => v.hidden = v.dataset.view !== tab);
+  if (tab === "control") renderAuto(true);
+  if (tab === "recetas") renderRecipes();
+  render();
+}
+function go(tab) { show(tab); if (location.hash !== "#" + tab) history.replaceState(null, "", "#" + tab); }
+document.querySelectorAll("nav.tabs button").forEach(b => b.onclick = () => go(b.dataset.tab));
+$("btnSettings").onclick = () => go(ui.tab === "ajustes" ? ui.prevTab : "ajustes");
+$("btnBack").onclick = () => go(ui.prevTab);
+window.addEventListener("hashchange", () => { const h = location.hash.slice(1); if (TABS.includes(h)) show(h); });
+const h0 = location.hash.slice(1);
+show(TABS.includes(h0) ? h0 : "monitoreo");
+tick();
+setInterval(tick, 1000);
+})();
+</script>
